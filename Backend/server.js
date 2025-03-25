@@ -33,7 +33,6 @@ mongoose
     try {
       const { username, email, password } = req.body;
   
-      // Check if the email already exists
       const existingUser = await User.findOne({ email });
       if (existingUser) return res.status(400).json({ message: "Email already in use" });
   
@@ -42,7 +41,7 @@ mongoose
         username,
         email,
         password,
-        userId: new mongoose.Types.ObjectId().toString(), // Explicitly set a unique userId
+        userId: new mongoose.Types.ObjectId().toString(), 
       });
       await newUser.save();
   
@@ -51,6 +50,24 @@ mongoose
       res.status(500).json({ message: "Server error", error: error.message });
     }
   });
+
+
+  // login
+  app.post("/api/auth/login", async (req, res) => {
+    try {
+      const { email, password } = req.body;
+      const user = await User.findOne({ email });
+      if (!user) return res.status(400).json({ message: "Invalid credentials" });
+  
+      const isMatch = await bcrypt.compare(password, user.password);
+      if (!isMatch) return res.status(400).json({ message: "Invalid credentials" });
+  
+      res.json({ message: "Login successful", user: { id: user._id, username: user.username, email: user.email } });
+    } catch (error) {
+      res.status(500).json({ message: "Server error", error: error.message });
+    }
+  });
+  
 
   const PORT =  5000;
 
